@@ -92,9 +92,11 @@ def api_read():
     predicted_condition_idx = 9
     type_confidance = 0
     file = request.files['file']
-    image_extensions = ['jpg', 'jpeg', 'png']
+    image_extensions = ['jpg', 'jpeg', 'png', 'JPG', 'JPEG', 'PNG']
     if file.filename.split('.')[-1] not in image_extensions:
-        return jsonify({'error': 'Only jpg, jpeg and png are supported'}), 415
+        response = flask.jsonify({'error': 'Only jpg, jpeg and png are supported'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response, 415
 
     image_bytes = file.read()
     road_image = Image.open(io.BytesIO(image_bytes))
@@ -118,7 +120,7 @@ def api_read():
         _, y_hat = outputs.max(1)
         predicted_condition_idx = str(y_hat.item())
 
-    return jsonify({
+    response = flask.jsonify({
         'type': {
             'prediction': road_types[predicted_type_idx],
             'confidence': type_confidance
@@ -128,6 +130,8 @@ def api_read():
             'confidence': 0
         },
     })
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 
 # main loop to run app in debug mode
