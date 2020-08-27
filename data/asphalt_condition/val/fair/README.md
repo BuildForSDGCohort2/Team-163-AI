@@ -1,0 +1,1 @@
+Copy files of this image category here, as much as possible use images NOT already included in the train folder. Use 50-70 images, maximum resolution 200px for good performance.
