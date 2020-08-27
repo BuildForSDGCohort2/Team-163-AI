@@ -1,0 +1,8 @@
+dev/
+/output/*
+!/output/README.md
+/data/**/*.*
+!/data/**/*.md
+*.dat
+.idea
+.vscode

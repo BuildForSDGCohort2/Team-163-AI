@@ -1,0 +1,1 @@
+Copy files of this image category here. Use 120-200 images, maximum resolution 200px for good performance.
