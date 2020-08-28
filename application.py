@@ -2,10 +2,11 @@ import io
 import torch
 import torch.nn as nn
 import flask
-from flask import request, jsonify
+from flask import request, jsonify, send_file
 from torchvision import models, transforms
 from PIL import Image
 from flask_cors import CORS
+import os
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
@@ -14,29 +15,12 @@ cors = CORS(app)
 
 @app.route('/', methods=['GET'])
 def home():
-    return '''<h1>Road Quality Classification API</h1>
-<p>An API to analyze and classify photos of roads</p>
-<p><b>API Version:</b> 1.0.0</p>
-<hr/>
-<h3>Status</h3>
-<p>This model is still in training.</p>
-<h3>Endpoints</h3>
-<ol>
-    <li><a href="#">api/v1/train</a>
-        <p>
-        To be implemented
-        </p>
-    </li>
-    <li><a href="#">api/v1/read</a>
-        <p>
-        Accepts <code>POST</code> request only. The field <code>image</code> is required.
-        </p>
-    </li>
-</ol>
-
-<h3>Source Code</h3>
-<p><a href="#">https://github.com/path/to/source</a></p>
-'''
+    try: 
+        return send_file(os.path.join('api_info.html'), 'text/html')
+    except Exception as e:
+        response = flask.jsonify({'error': 'A server error occured, while attempting to render page'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response, 500
 
 
 @app.route('/api/v1/train', methods=['GET'])
