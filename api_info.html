@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Road Classification Model Tester</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        #previewImg {
+            height: 160px;
+        }
+
+        #apiEndpoint {
+            width: 60%
+        }
+
+        section:nth-child(2) {
+            background-color: #eee;
+        }
+
+        pre {
+            padding: 1em;
+            background: #222;
+            color: #fff;
+
+        }
+
+        .content {
+            display: flex;
+        }
+
+        @media screen and (max-width: 640px) {
+            .content {
+                flex-direction: column;
+            }
+        }
+
+        .content>div {
+            flex: 1;
+            padding: 1em;
+        }
+
+        .content>div:last-child {
+            background-color: #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <section>
+        <h1>Road Quality Classification API</h1>
+        <p>An API to analyze and classify photos of roads</p>
+        <p><b>API Version:</b> 1.0.0</p>
+        <p><b>Project Status:</b> This model is still in training.</p>
+        <p><b>Source Code:</b><a
+                href="https://github.com/BuildForSDGCohort2/Team-163-AI">https://github.com/BuildForSDGCohort2/Team-163-AI</a>
+        </p>
+        <hr />
+        <h3>Endpoints</h3>
+        <ol>
+            <li><a href="#">api/v1/train</a>
+                <p>
+                    To be implemented
+                </p>
+            </li>
+            <li><a href="#">api/v1/read</a>
+                <p>
+                    Accepts <code>POST</code> request only. The field <code>image</code> is required.
+                </p>
+            </li>
+        </ol>
+
+    </section>
+
+    <section>
+        <div class="content">
+            <div>
+                <h1>Live test:</h1>
+                <p>
+                    <label for="apiEndpoint">API Endpoint</label>
+                    <input id="apiEndpoint" placeholder="API Endpoint"
+                        value="https://team-163-ai.herokuapp.com/api/v1/read">
+                </p>
+                <p>
+                    <b>Select an image file and click upload</b>
+                </p>
+                <p>
+                    <img id="previewImg" alt="Preview Image" src="https://place-hold.it/200x160&text=Image%20Preview">
+                </p>
+                <p>
+                    <input type="file" id="userFileInput" title="Input file">
+                    <button type="button" id="uploadBtn">Upload</button>
+                </p>
+                <hr />
+                <sub>NOTE: The API may take time to boot up on Heroku. <strong>Give it at least a minute for first request</strong>.
+                    After that responses will be quicker</sub>
+            </div>
+            <div>
+                <h2>Results:</h2>
+                <p>
+                    Status
+                <pre id="statusCode"></pre>
+                </p>
+                <p>
+                    Body
+                <pre id="previewBody">
+
+                </pre>
+                </p>
+            </div>
+        </div>
+    </section>
+    <script>
+        const statusView = document.getElementById("statusCode");
+        const bodyView = document.getElementById("previewBody");
+        const imageView = document.getElementById("previewImg");
+        const uploadImg = () => {
+            const endpointUrl = document.getElementById("apiEndpoint").value || "http://127.0.0.1:5000";
+            const formData = new FormData();
+            const fileField = document.getElementById("userFileInput");
+            if (!fileField.files[0]) {
+                return alert("Select an image!");
+            }
+            formData.append('file', fileField.files[0]);
+            bodyView.textContent = '';
+            statusView.textContent = '...';
+            fetch(endpointUrl, {
+                method: 'POST',
+                body: formData,
+            }).then(response => {
+                statusView.textContent = response.status;
+                return response.text();
+            })
+                .then(data => {
+                    bodyView.textContent = data;
+                })
+                .catch(e => {
+                    statusView.textContent = 'ERROR Occured! See console for more details';
+                    console.log(e);
+                    bodyView.textContent = JSON.stringify(e);
+                });
+        }
+        const readURL = (e) => {
+            const input = e.target;
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                    imageView.setAttribute("src", e.target.result);
+                }
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        document.getElementById("userFileInput").addEventListener("change", readURL);
+        document.getElementById("uploadBtn").addEventListener("click", uploadImg);
+    </script>
+</body>
+
+</html>

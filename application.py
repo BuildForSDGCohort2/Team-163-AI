@@ -2,39 +2,26 @@ import io
 import torch
 import torch.nn as nn
 import flask
-from flask import request, jsonify
+from flask import request, send_file
 from torchvision import models, transforms
 from PIL import Image
+from flask_cors import CORS
+import os
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
+cors = CORS(app)
 
 
 @app.route('/', methods=['GET'])
 def home():
-    return '''<h1>Road Quality Classification API</h1>
-<p>An API to analyze and classify photos of roads</p>
-<p><b>API Version:</b> 1.0.0</p>
-<hr/>
-<h3>Status</h3>
-<p>This model is still in training.</p>
-<h3>Endpoints</h3>
-<ol>
-    <li><a href="#">api/v1/train</a>
-        <p>
-        To be implemented
-        </p>
-    </li>
-    <li><a href="#">api/v1/read</a>
-        <p>
-        Accepts <code>POST</code> request only. The field <code>image</code> is required.
-        </p>
-    </li>
-</ol>
-
-<h3>Source Code</h3>
-<p><a href="#">https://github.com/path/to/source</a></p>
-'''
+    try:
+        return send_file(os.path.join('api_info.html'), 'text/html')
+    except Exception as e:
+        print(e)
+        response = flask.jsonify({'error': 'A server error occured, while attempting to render page'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response, 500
 
 
 @app.route('/api/v1/train', methods=['GET'])
@@ -92,9 +79,11 @@ def api_read():
     predicted_condition_idx = 9
     type_confidance = 0
     file = request.files['file']
-    image_extensions = ['jpg', 'jpeg', 'png']
+    image_extensions = ['jpg', 'jpeg', 'png', 'JPG', 'JPEG', 'PNG']
     if file.filename.split('.')[-1] not in image_extensions:
-        return jsonify({'error': 'Only jpg, jpeg and png are supported'}), 415
+        response = flask.jsonify({'error': 'Only jpg, jpeg and png are supported'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response, 415
 
     image_bytes = file.read()
     road_image = Image.open(io.BytesIO(image_bytes))
@@ -118,7 +107,7 @@ def api_read():
         _, y_hat = outputs.max(1)
         predicted_condition_idx = str(y_hat.item())
 
-    return jsonify({
+    response = flask.jsonify({
         'type': {
             'prediction': road_types[predicted_type_idx],
             'confidence': type_confidance
@@ -128,6 +117,8 @@ def api_read():
             'confidence': 0
         },
     })
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 
 # main loop to run app in debug mode
