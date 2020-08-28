@@ -15,7 +15,7 @@ cors = CORS(app)
 
 @app.route('/', methods=['GET'])
 def home():
-    try: 
+    try:
         return send_file(os.path.join('api_info.html'), 'text/html')
     except Exception as e:
         print(e)
