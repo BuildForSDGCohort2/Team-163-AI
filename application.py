@@ -2,7 +2,7 @@ import io
 import torch
 import torch.nn as nn
 import flask
-from flask import request, jsonify, send_file
+from flask import request, send_file
 from torchvision import models, transforms
 from PIL import Image
 from flask_cors import CORS
@@ -18,6 +18,7 @@ def home():
     try: 
         return send_file(os.path.join('api_info.html'), 'text/html')
     except Exception as e:
+        print(e)
         response = flask.jsonify({'error': 'A server error occured, while attempting to render page'})
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response, 500
