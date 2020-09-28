@@ -7,6 +7,8 @@ from torchvision import models, transforms
 from PIL import Image
 from flask_cors import CORS
 import os
+import requests
+from io import BytesIO
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
@@ -74,19 +76,9 @@ road_types = {'0': 'asphalt', '1': 'paved', '2': 'dirt'}
 road_conditions = {'0': 'bad', '1': 'fair', '2': 'good'}
 
 
-@app.route('/api/v1/read', methods=['POST'])
-def api_read():
+def analyze_image(road_image, source):
     predicted_condition_idx = 9
     type_confidance = 0
-    file = request.files['file']
-    image_extensions = ['jpg', 'jpeg', 'png', 'JPG', 'JPEG', 'PNG']
-    if file.filename.split('.')[-1] not in image_extensions:
-        response = flask.jsonify({'error': 'Only jpg, jpeg and png are supported'})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        return response, 415
-
-    image_bytes = file.read()
-    road_image = Image.open(io.BytesIO(image_bytes))
     tensor = trans(road_image).unsqueeze(0)
     outputs = model_roadtype.forward(tensor)
     _, y_hat = outputs.max(1)
@@ -108,6 +100,7 @@ def api_read():
         predicted_condition_idx = str(y_hat.item())
 
     response = flask.jsonify({
+        'source': source,
         'type': {
             'prediction': road_types[predicted_type_idx],
             'confidence': type_confidance
@@ -119,6 +112,31 @@ def api_read():
     })
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
+
+
+@app.route('/api/v1/read/', methods=['GET'])
+def api_read_url():
+    file_url = request.args.get('url')
+    if file_url is None:
+        response = flask.jsonify({'error': 'You must provide an valid url for the image'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response, 400
+    response = requests.get(file_url)
+    img = Image.open(BytesIO(response.content))
+    return analyze_image(img, file_url)
+
+
+@app.route('/api/v1/read', methods=['POST'])
+def api_read_post():
+    file = request.files['file']
+    image_extensions = ['jpg', 'jpeg', 'png', 'JPG', 'JPEG', 'PNG']
+    if file.filename.split('.')[-1] not in image_extensions:
+        response = flask.jsonify({'error': 'Only jpg, jpeg and png are supported'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response, 415
+    image_bytes = file.read()
+    road_image = Image.open(io.BytesIO(image_bytes))
+    return analyze_image(road_image, 'POST')
 
 
 # main loop to run app in debug mode
