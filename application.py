@@ -34,7 +34,7 @@ def api_train():
     return content, 501
 
 
-model_roadtype = models.resnet18(pretrained=True)
+model_roadtype = models.resnet50(pretrained=True)
 num_ftrs = model_roadtype.fc.in_features
 model_roadtype.fc = nn.Linear(num_ftrs, 3)
 
@@ -78,36 +78,44 @@ road_conditions = {'0': 'bad', '1': 'fair', '2': 'good'}
 
 def analyze_image(road_image, source):
     predicted_condition_idx = 9
-    type_confidance = 0
+    condition_confidence = 0
     tensor = trans(road_image).unsqueeze(0)
     outputs = model_roadtype.forward(tensor)
     _, y_hat = outputs.max(1)
+    percentage = torch.nn.functional.softmax(outputs, dim=1)[0] * 100
+    type_confidence = str(percentage[y_hat[0]].item())
     predicted_type_idx = str(y_hat.item())
 
     if predicted_type_idx == '0':
         outputs = model_asphalt_condition.forward(tensor)
         _, y_hat = outputs.max(1)
+        percentage = torch.nn.functional.softmax(outputs, dim=1)[0] * 100
+        condition_confidence = str(percentage[y_hat[0]].item())
         predicted_condition_idx = str(y_hat.item())
 
     if predicted_type_idx == '1':
         outputs = model_paved_condition.forward(tensor)
         _, y_hat = outputs.max(1)
+        percentage = torch.nn.functional.softmax(outputs, dim=1)[0] * 100
+        condition_confidence = str(percentage[y_hat[0]].item())
         predicted_condition_idx = str(y_hat.item())
 
     if predicted_type_idx == '2':
         outputs = model_unpaved_condition.forward(tensor)
         _, y_hat = outputs.max(1)
+        percentage = torch.nn.functional.softmax(outputs, dim=1)[0] * 100
+        condition_confidence = str(percentage[y_hat[0]].item())
         predicted_condition_idx = str(y_hat.item())
 
     response = flask.jsonify({
         'source': source,
         'type': {
             'prediction': road_types[predicted_type_idx],
-            'confidence': type_confidance
+            'confidence': type_confidence
         },
         'condition': {
             'prediction': road_conditions[predicted_condition_idx],
-            'confidence': 0
+            'confidence': condition_confidence
         },
     })
     response.headers.add('Access-Control-Allow-Origin', '*')
