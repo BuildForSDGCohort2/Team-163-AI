@@ -6,3 +6,4 @@ dev/
 *.dat
 .idea
 .vscode
+*.skip
